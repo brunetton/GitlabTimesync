@@ -2,6 +2,7 @@
 # Gitlab url and private access token (see https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
 url: https://my.gitlab.com
 token: mygitlabsecrettoken
+project_id: 42
 
 [default]
 # Default Hamster local SQLite file

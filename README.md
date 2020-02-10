@@ -13,7 +13,7 @@ This project is based on my own "same" project for synching with Redmine; availa
 
 # Limitations
 
-This scripts is limited to mono-project Gitlab; ie issues are searched by `id` (in all projects you've access) and script will crash if more than one issue will be found by id
+This scripts is limited to mono-project Gitlab; ie all issues must belong to the same Gitlab project.
 
 # Installation
 
@@ -31,6 +31,7 @@ Copy `gitlabtimesync.config.tpl` to `gitlabtimesync.config` : it's an INI-like f
 
  - url: your Gitlab public url
  - token: a Gitlab private API access token (with `api` scope). See [here](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for more details
+ - project_id: Gitlab internal ID of project containing issues (this ID is given in Gitlab's project's page just below the project's name (search for `Project ID:`))
 
 # Usage
 

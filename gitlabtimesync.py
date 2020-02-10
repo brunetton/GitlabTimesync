@@ -108,9 +108,7 @@ def syncToGitlab(time_entries, date):
     '''Push all given time_entries to Gitlab'''
 
     # Init Gitlab object
-    gitlab_url = config.get('gitlab', 'url')
-    gitlab_token = config.get('gitlab', 'token')
-    gl = gitlab.Gitlab(gitlab_url, gitlab_token)
+    gl = gitlab.Gitlab(config.get('gitlab', 'url'), config.get('gitlab', 'project_id'), config.get('gitlab', 'token'))
 
     # Synch
     print_("-> Sending entries")
