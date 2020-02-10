@@ -1,0 +1,5 @@
+*~
+*.pyc
+git_ignored/
+activities.config
+gitlabtimesync.config
