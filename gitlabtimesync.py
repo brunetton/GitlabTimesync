@@ -70,7 +70,13 @@ def getTimeEntries(date, config):
     activities = []
     total_duration = 0
     for time_entry in time_entries:
+        # Try to find Gitlab issue IDs from label using regexp defined in config file
         label = time_entry[0]
+        match = re.match(config.get('default', 'issue_id_regexp'), label)
+        if not match:
+            print('\n** Warning: ignoring entry "{}" : not able to find issue ID\n'.format(label))
+            continue
+        issue_id = match.group(1)
         if not time_entry[2]:
             print(('\n** Warning: ignoring "{}": Not completed yet\n'.format(label)))
             continue
@@ -80,13 +86,6 @@ def getTimeEntries(date, config):
         total_duration += duration
         duration = round(duration, 1)
         comment = time_entry[3]
-        # Try to find Gitlab issue IDs from label using regexp defined in config file
-        match = re.match(config.get('default', 'issue_id_regexp'), label)
-        if match:
-            issue_id = match.group(1)
-        else:
-            print('\n** Warning: ignoring entry "{}" : not able to find issue ID\n'.format(label))
-            continue
         print("* [{duration}h #{id}]: {label}".format(
             duration=round(duration, 1), id=issue_id, label=label
         ))
