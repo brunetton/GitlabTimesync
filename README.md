@@ -13,7 +13,7 @@ This project is based on my own "same" project for synching with Redmine; availa
 
 # Limitations
 
-This scripts is limited to mono-project Gitlab; ie all issues must belong to the same Gitlab project.
+This scripts is limited to mono-project Gitlab; ie all issues must belong to the same Gitlab project (see below for ideas for the future)
 
 # Installation
 
@@ -53,3 +53,7 @@ Note that all dates parameters can be also replaced by "days ago" parameters :
  - `gitlabtimesync.py 1` will sync yesterday work
  - `gitlabtimesync.py from 7` will sync last week work (from 7 days ago to today)
  - `gitlabtimesync.py from 15 to 7` will sync week before last week work (from 15 days ago to last week)
+
+# Future ideas
+
+- to add support to multiple projects, we could use Hamster tags/activities. For example, `#123 - this is a bug@project1` and `#123 - this is a bug@project2` could differentiate 2 different projects `project1` and `project2`
