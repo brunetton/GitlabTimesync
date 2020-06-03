@@ -33,6 +33,10 @@ Copy `gitlabtimesync.config.tpl` to `gitlabtimesync.config` : it's an INI-like f
  - token: a Gitlab private API access token (with `api` scope). See [here](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for more details
  - project_id: Gitlab internal ID of project containing issues (this ID is given in Gitlab's project's page just below the project's name (search for `Project ID:`))
 
+### Using hamster-snap
+
+When using [Snap](https://snapcraft.io/) installation ([hamster-snap](~/snap/hamster-snap/47/.local/share/hamster/hamster.db)), database file is located in `~/snap/hamster-snap/47/.local/share/hamster/hamster.db` (you may change `47` version in path). In that case, you'll have to change `db` path in `[default]` section.
+
 # Usage
 
 1. Log some activities in Hamster, precising Gitlab issues IDs. Valid formats are :
