@@ -40,7 +40,7 @@ Copy `gitlabtimesync.config.tpl` to `gitlabtimesync.config` : it's an INI-like f
  - **Fix #243**
  - **Adding logging output (#132)**
 
-    (you can add other custom formats, based on regexs)
+    (you can add other custom formats, changing `issue_id_regexp` regex in configuration file)
 
 2. run the python script: **gitlabtimesync.py**
  - to sync one day, just give the date to the script : `gitlabtimesync.py 10/10/13`
