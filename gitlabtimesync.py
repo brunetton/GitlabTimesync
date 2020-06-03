@@ -8,6 +8,7 @@ import sqlite3
 import sys
 from configparser import RawConfigParser
 from pprint import pformat
+import logging
 
 import moment  # https://pypi.python.org/pypi/moment
 from docopt import docopt  # http://docopt.org/
@@ -16,6 +17,7 @@ from requests import ConnectionError
 from lib import common, gitlab
 from lib.common import print_
 
+log = logging.getLogger(__name__)
 
 CONFIG_FILE = 'gitlabtimesync.config'
 DB_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:mm:ss'
@@ -31,6 +33,7 @@ Usage:
 Options:
     -a --auto             Do not ask for manual validation for each day, sync all days in given interval
     -n --no-date-confirm  Do not ask for manual dates interval confirmation at begining
+    --debug               Display debug messages
 
 Note: start, stop and date could be :
     - a date: ("12/10", "12/10/15", ...)
@@ -54,6 +57,8 @@ def getTimeEntries(date, config):
         Returns an iterable object with SELECT result'''
         _date = "%{}%".format(date.format('YYYY-MM-DD'))
         connection = sqlite3.connect(os.path.expanduser(db_filename))
+        if args['--debug']:
+            connection.set_trace_callback(print)
         dbCursor = connection.cursor()
         dbCursor.execute("""SELECT
             activities.name,facts.start_time,facts.end_time,facts.description,categories.name
@@ -69,9 +74,11 @@ def getTimeEntries(date, config):
     time_entries = fetchFromDatabase(db_filename, date)
     activities = []
     total_duration = 0
+    log.debug("Parsing entries from database ...")
     for time_entry in time_entries:
         # Try to find Gitlab issue IDs from label using regexp defined in config file
         label = time_entry[0]
+        log.debug("-> {!r}".format(label))
         match = re.match(config.get('default', 'issue_id_regexp'), label)
         if not match:
             print('\n** Warning: ignoring entry "{}" : not able to find issue ID\n'.format(label))
@@ -139,6 +146,9 @@ if __name__ == '__main__':
     # Parse command line parameters
     args = docopt(DOC.format(self_name=os.path.basename(__file__)))
     from_date, to_date, for_date = common.parse_dates_in_args(args, config)
+
+    # logging config
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=(logging.DEBUG if args['--debug'] else logging.INFO))
 
     # Get preferred date format from config file to display dates
     date_format = config.get('default', 'date_formats')
