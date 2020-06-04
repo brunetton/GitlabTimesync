@@ -61,3 +61,7 @@ Note that all dates parameters can be also replaced by "days ago" parameters :
 # Future ideas
 
 - to add support to multiple projects, we could use Hamster tags/activities. For example, `#123 - this is a bug@project1` and `#123 - this is a bug@project2` could differentiate 2 different projects `project1` and `project2`
+
+# Bonus script: stop_current_activity.py
+
+I included a "bonus script": `stop_current_activity.py` that automatically stop current activity. I use this script with systemd to stop tracking when I put my computer in sleep mode.
