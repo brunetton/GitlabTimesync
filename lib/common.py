@@ -76,3 +76,13 @@ def parse_dates_in_args(args, config):
     if args['<date>']:
         for_date = parse_date_or_days_ahead(args['<date>'], config, quit_if_none=True)
     return from_date, to_date, for_date
+
+def str_to_int(string):
+    """Try to convert given string to int and return it.
+    Return ValueError if conversion failed
+    """
+    try:
+        int_ = int(string)
+    except ValueError:
+        return ValueError
+    return int_

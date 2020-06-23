@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import requests
+import logging
 
+from . import common
+
+log = logging.getLogger(__name__)
 
 class GitlabException(Exception):
     pass
@@ -25,6 +29,9 @@ class Gitlab():
         """Add a time entry to this issue id.
         - time_spent_str is the time spent, in Gitlab time format (ex: "30m", "1.5h", ...)
         """
+        issue_id = common.str_to_int(issue_id)
+        assert isinstance(issue_id, int), issue_id
+
         issues = self.api('GET', '/projects/{}/issues?iids={}'.format(self.project_id, issue_id))
         if len(issues) == 0:
             raise GitlabException("Can't find issue #{}".format(issue_id))
@@ -35,6 +42,7 @@ class Gitlab():
 
     def api(self, method: str, endpoint: str):
         complete_url = '{}/api/v{}/{}'.format(self.gitlab_url, self.api_version, endpoint)
+        log.debug(complete_url)
         headers = {'PRIVATE-TOKEN': self.private_token}
         if method == 'GET':
             response = requests.get(complete_url, headers=headers)
