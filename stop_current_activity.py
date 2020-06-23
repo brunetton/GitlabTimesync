@@ -8,7 +8,7 @@ import sqlite3
 import sys
 from configparser import RawConfigParser
 
-import moment
+import arrow
 
 CONFIG_FILE = 'gitlabtimesync.config'
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     config.read(config_file)
     db_filename = config.get('default', 'db')
     # Stop current activity
-    now_str = moment.now().format("YYYY-MM-DD HH:mm:ss")
+    now_str = arrow.now().format("YYYY-MM-DD HH:mm:ss")
     connection = sqlite3.connect(Path(db_filename).expanduser())
     dbCursor = connection.cursor()
     dbCursor.execute("UPDATE facts SET end_time = ? WHERE end_time IS NULL LIMIT 1;", (now_str, ))

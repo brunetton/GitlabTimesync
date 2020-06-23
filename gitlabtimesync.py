@@ -10,7 +10,7 @@ from configparser import RawConfigParser
 from pprint import pformat
 import logging
 
-import moment  # https://pypi.python.org/pypi/moment
+import arrow
 from docopt import docopt  # http://docopt.org/
 from requests import ConnectionError
 
@@ -87,8 +87,8 @@ def getTimeEntries(date, config):
         if not time_entry[2]:
             print(('\n** Warning: ignoring "{}": Not completed yet\n'.format(label)))
             continue
-        duration = (moment.date(time_entry[2], DB_TIMESTAMP_FORMAT) -
-                    moment.date(time_entry[1], DB_TIMESTAMP_FORMAT)).seconds / 3600.
+        duration = (arrow.get(time_entry[2], DB_TIMESTAMP_FORMAT) -
+                    arrow.get(time_entry[1], DB_TIMESTAMP_FORMAT)).seconds / 3600.
         assert duration > 0, "Duration for entry {} is not >0: {}".format(label, duration)
         total_duration += duration
         duration = round(duration, 1)
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         print(('Can\'t find config file: {}\nYou can copy template conf file and adapt.'.format(CONFIG_FILE)))
         sys.exit(-1)
 
-    config = RawConfigParser()
+    config = RawConfigParser(inline_comment_prefixes=(';',))
     config.read(CONFIG_FILE)
 
     # Parse command line parameters
@@ -151,29 +151,29 @@ if __name__ == '__main__':
     logging.basicConfig(format="%(levelname)s: %(message)s", level=(logging.DEBUG if args['--debug'] else logging.INFO))
 
     # Get preferred date format from config file to display dates
-    date_format = config.get('default', 'date_formats')
-    if date_format.find(',') != -1:
+    display_date_format = config.get('default', 'date_formats')
+    if display_date_format.find(',') != -1:
         # More than one format is defined, take first
-        date_format = (date_format.split(',')[0]).strip()
+        display_date_format = (display_date_format.split(',')[0]).strip()
 
     # print confirmation to user, to check dates
     if from_date:
         if to_date is None:
             # implicitly takes today for to_date
-            to_date = moment.now()
-            question = "Sync tasks from {} to today (included) ?".format(from_date.format(date_format))
+            to_date = arrow.now()
+            question = "Sync tasks from {} to today (included) ?".format(from_date.format(display_date_format))
         else:
             question = "Sync tasks from {} to {} (included) ?".format(
-                from_date.format(date_format),
-                to_date.format(date_format)
+                from_date.format(display_date_format),
+                to_date.format(display_date_format)
             )
     elif for_date:
         if args['<date>'] == '0':
             question = "Sync tasks for today ?"
         elif args['<date>'] == '1':
-            question = "Sync tasks for yesterday ({}) ?".format(for_date.format(date_format))
+            question = "Sync tasks for yesterday ({}) ?".format(for_date.format(display_date_format))
         else:
-            question = "Sync tasks for {} ?".format(for_date.format(date_format))
+            question = "Sync tasks for {} ?".format(for_date.format(display_date_format))
     assert question
 
     if not args['--no-date-confirm']:
@@ -195,12 +195,12 @@ if __name__ == '__main__':
     date = from_date.clone()
     while date <= to_date:
         if not for_date:
-            print("{s} {formatted_date} {s}".format(s='*' * 20, formatted_date=date.format(date_format)))
+            print("{s} {formatted_date} {s}".format(s='*' * 20, formatted_date=date.format(display_date_format)))
         # Get time entries from local DB
         time_entries, day_total = getTimeEntries(date, config)
         if not time_entries:
             print("\nNo time entries to send... have you been lazy ?\n\n\n")
-            date = date.add(days=1)
+            date = date.shift(days=1)
             continue
         # Wait for user validation
         if not args['--auto']:
@@ -214,6 +214,6 @@ if __name__ == '__main__':
         syncToGitlab(time_entries, date)
         sent_time = math.fsum(d['duration'] for d in time_entries)
         total_sent_time += sent_time
-        date = date.add(days=1)
+        date = date.shift(days=1)
         print()
     print("\n---> TOTAL: {}h found in Hamster - {}h sent to Gitlab".format(round(total_time, 1), total_sent_time))
