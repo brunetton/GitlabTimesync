@@ -9,6 +9,7 @@ import sys
 from configparser import RawConfigParser
 from pprint import pformat
 import logging
+from collections import defaultdict
 
 import arrow
 from docopt import docopt  # http://docopt.org/
@@ -44,12 +45,12 @@ Note: start, stop and date could be :
 
 
 def getTimeEntries(date, config):
-    '''Reads Sqlite Hamster DB file and return an array of explicit associative array for times entries,
+    '''Reads Sqlite Hamster DB file and return an array of explicit associative array for times entries for given date,
     filtering out entries that do not match issue_id_regexp defined in config file
     Returns:
         - activities_array:
             array of dicts with 'description', 'label', 'issue_id', 'duration', 'comment', 'activity_id' keys
-        - total_duration: sum of all activities duration
+        - times_by_issue_id: sum times indexed by activity id
     '''
 
     def fetchFromDatabase(db_filename, date):
@@ -73,6 +74,7 @@ def getTimeEntries(date, config):
     db_filename = config.get('default', 'db')
     time_entries = fetchFromDatabase(db_filename, date)
     activities = []
+    times_by_issue_id = defaultdict(float)
     total_duration = 0
     log.debug("Parsing entries from database ...")
     for time_entry in time_entries:
@@ -81,11 +83,11 @@ def getTimeEntries(date, config):
         log.debug("-> {!r}".format(label))
         match = re.match(config.get('default', 'issue_id_regexp'), label)
         if not match:
-            print('\n** Warning: ignoring entry "{}" : not able to find issue ID\n'.format(label))
+            print('** Warning: ignoring entry "{}" : not able to find issue ID\n'.format(label))
             continue
         issue_id = match.group(1)
         if not time_entry[2]:
-            print(('\n** Warning: ignoring "{}": Not completed yet\n'.format(label)))
+            print(('** Warning: ignoring "{}": Not completed yet\n'.format(label)))
             continue
         duration = (arrow.get(time_entry[2], DB_TIMESTAMP_FORMAT) -
                     arrow.get(time_entry[1], DB_TIMESTAMP_FORMAT)).seconds / 3600.
@@ -105,12 +107,18 @@ def getTimeEntries(date, config):
             'duration': duration,
             'comment': comment,
         })
+        times_by_issue_id[issue_id] += duration
+    # Display sums
     if total_duration > 0:
-        print("\n\nTotal : {}h".format(round(total_duration, 1)))
-    return activities, total_duration
+        # Display times_by_issue_id
+        print("\nData to send:")
+        for issue_id, duration in times_by_issue_id.items():
+            print("  - #{}: {}h".format(issue_id, duration))
+        print("\nTotal : {}h".format(round(total_duration, 1)))
+    return activities, times_by_issue_id, total_duration
 
 
-def syncToGitlab(time_entries, date):
+def syncToGitlab(times_by_issue_id, date):
     '''Push all given time_entries to Gitlab'''
 
     # Init Gitlab object
@@ -119,15 +127,14 @@ def syncToGitlab(time_entries, date):
     # Synch
     print_("-> Sending entries")
     try:
-        for time_entry_infos in time_entries:
+        for issue_id, total in times_by_issue_id.items():
             print_('.')
-            issue_id = time_entry_infos['issue_id']
             try:
                 # Send this activity to Gitlab
-                gl.add_time_entry(issue_id, "{}h".format(time_entry_infos['duration']))
+                gl.add_time_entry(issue_id, "{}h".format(total))
             except gitlab.GitlabException:
                 print()
-                print("Error sending:\n{}".format(pformat(time_entry_infos)))
+                print("Error sending {!r}".format((issue_id, total)))
                 raise
     except ConnectionError as e:
         print("Connection Error: {}".format(e.message))
@@ -196,8 +203,8 @@ if __name__ == '__main__':
     while date <= to_date:
         if not for_date:
             print("{s} {formatted_date} {s}".format(s='*' * 20, formatted_date=date.format(display_date_format)))
-        # Get time entries from local DB
-        time_entries, day_total = getTimeEntries(date, config)
+        # Get time entries from local DB and list them in terminal
+        time_entries, times_by_issue_id, day_total = getTimeEntries(date, config)
         if not time_entries:
             print("\nNo time entries to send... have you been lazy ?\n\n\n")
             date = date.shift(days=1)
@@ -211,7 +218,7 @@ if __name__ == '__main__':
                 print("\n")
                 sys.exit()
         total_time += day_total
-        syncToGitlab(time_entries, date)
+        syncToGitlab(times_by_issue_id, date)
         sent_time = math.fsum(d['duration'] for d in time_entries)
         total_sent_time += sent_time
         date = date.shift(days=1)
