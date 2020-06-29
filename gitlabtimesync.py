@@ -93,10 +93,11 @@ def getTimeEntries(date, config):
                     arrow.get(time_entry[1], DB_TIMESTAMP_FORMAT)).seconds / 3600.
         assert duration > 0, "Duration for entry {} is not >0: {}".format(label, duration)
         total_duration += duration
-        duration = round(duration, 1)
+        times_by_issue_id[issue_id] += duration
+        duration = round(duration, 2)
         comment = time_entry[3]
         print("* [{duration}h #{id}]: {label}".format(
-            duration=round(duration, 1), id=issue_id, label=label
+            duration=duration, id=issue_id, label=label
         ))
         if comment is not None:
             print("  {}".format(comment))
@@ -107,14 +108,16 @@ def getTimeEntries(date, config):
             'duration': duration,
             'comment': comment,
         })
-        times_by_issue_id[issue_id] += duration
     # Display sums
+    total_duration = round(total_duration, 2)
     if total_duration > 0:
-        # Display times_by_issue_id
+        # Display times_by_issue_id and round durations
         print("\nData to send:")
         for issue_id, duration in times_by_issue_id.items():
+            duration = round(duration, 2)
+            times_by_issue_id[issue_id] = duration
             print("  - #{}: {}h".format(issue_id, duration))
-        print("\nTotal : {}h".format(round(total_duration, 1)))
+        print("\nTotal : {}h".format(total_duration))
     return activities, times_by_issue_id, total_duration
 
 
