@@ -226,4 +226,13 @@ if __name__ == '__main__':
         total_sent_time += sent_time
         date = date.shift(days=1)
         print()
+
     print("\n---> TOTAL: {}h found in Hamster - {}h sent to Gitlab".format(round(total_time, 1), total_sent_time))
+
+    # save question to "last_sync.txt"
+    if for_date:
+        text = "{}".format(from_date.format(display_date_format))
+    else:
+        text = "from {} to {}".format(from_date.format(display_date_format), to_date.format(display_date_format))
+    with open('last_sync.txt', 'w') as _f:
+        _f.write(text)
