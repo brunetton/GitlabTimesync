@@ -52,7 +52,7 @@ def parse_date_or_days_ahead(datestr, config, quit_if_none=False):
     '''
     if datestr.isdigit():
         # It's a number, corresponding to some days ago from today. Return that date
-        return arrow.now().shift(days=int(datestr))
+        return arrow.now().shift(days=-int(datestr))
     # Try to find a formatted date
     date_formats = list(map(str.strip, config.get('default', 'date_formats').split(',')))
     date = parse_date(datestr, date_formats)
